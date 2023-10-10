@@ -1,25 +1,43 @@
 #!/bin/bash
 
-# Define the path to the manage_my_process script
-SCRIPT_PATH="/path/to/manage_my_process.sh"  # Replace with the actual path
+# Define paths
+PID_FILE="/var/run/my_process.pid"
+LOG_FILE="/tmp/my_process"
 
-# Define a function to start the process
 start() {
-    if [ -f "$SCRIPT_PATH" ]; then
-        nohup "$SCRIPT_PATH" &
-        echo "manage_my_process started."
+    if [ -f "$PID_FILE" ]; then
+        echo "manage_my_process is already running. PID: $(cat $PID_FILE)"
     else
-        echo "Error: manage_my_process script not found at $SCRIPT_PATH"
+        nohup "$0" background > /dev/null 2>&1 &
+        echo $! > "$PID_FILE"
+        echo "manage_my_process started. PID: $(cat $PID_FILE)"
     fi
 }
 
-# Define a function to stop the process
 stop() {
-    pkill -f "manage_my_process.sh"
-    echo "manage_my_process stopped."
+    if [ -f "$PID_FILE" ]; then
+        kill $(cat $PID_FILE)
+        rm "$PID_FILE"
+        echo "manage_my_process stopped."
+    else
+        echo "manage_my_process is not running."
+    fi
 }
 
-# Check the command line argument
+restart() {
+    stop
+    start
+    echo "manage_my_process restarted."
+}
+
+background() {
+    while true
+    do
+        echo "I am alive!" >> "$LOG_FILE"
+        sleep 2
+    done
+}
+
 case "$1" in
     start)
         start
@@ -28,8 +46,10 @@ case "$1" in
         stop
         ;;
     restart)
-        stop
-        start
+        restart
+        ;;
+    background)
+        background
         ;;
     *)
         echo "Usage: $0 {start|stop|restart}"
@@ -38,3 +58,4 @@ case "$1" in
 esac
 
 exit 0
+
