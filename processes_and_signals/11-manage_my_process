@@ -1,28 +1,40 @@
-#!/usr/bin/env bash
-# A script to manage deamon
+#!/bin/bash
 
-command="$1"
+# Define the path to the manage_my_process script
+SCRIPT_PATH="/path/to/manage_my_process.sh"  # Replace with the actual path
 
-if [ -z "$command" ]; then
-  echo "Usage: manage_my_process {start|stop|restart}"
-  exit
-fi
+# Define a function to start the process
+start() {
+    if [ -f "$SCRIPT_PATH" ]; then
+        nohup "$SCRIPT_PATH" &
+        echo "manage_my_process started."
+    else
+        echo "Error: manage_my_process script not found at $SCRIPT_PATH"
+    fi
+}
 
-if [[ "$command" == "start" ]]; then
-  ./manage_my_process &
-  echo "$!" > /var/run/my_process.pid
-  echo "manage_my_process started"
+# Define a function to stop the process
+stop() {
+    pkill -f "manage_my_process.sh"
+    echo "manage_my_process stopped."
+}
 
-elif [[ "$command" == "stop" ]]; then
-  sudo pkill -f './manage_my_process' &
-  rm /var/run/my_process.pid &
-  echo "manage_my_process stopped"
+# Check the command line argument
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
 
-elif [[ "$command" == "restart" ]]; then
-  "$0" stop >& /dev/null
-  "$0" start >& /dev/null
-  echo "manage_my_process restarted"
-
-else
-  echo "Usage: manage_my_process {start|stop|restart}"
-fi
+exit 0
