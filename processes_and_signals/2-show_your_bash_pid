@@ -1,5 +1,11 @@
-#!/usr/bin/env bash
-# A script to display lines containing bash word and show bash pid
-# shellcheck disable=SC2009
+#!/bin/bash
 
-source "${0%/*}/1-list_your_processes" 
+# Get the PID of the current Bash process
+pid=$PPID
+
+# Iterate over all processes and print lines containing the Bash word
+for line in $(ps -ax); do
+  if [[ "$line" =~ "bash" ]] && [[ "$line" =~ "$pid" ]]; then
+    echo "$line"
+  fi
+done 
